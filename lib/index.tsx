@@ -20,7 +20,7 @@ interface Props {
     style?: CSSProperties
     onClick?: MouseEventHandler<HTMLDivElement>
     //
-    onSwipe?: (angle: number | undefined) => void
+    onSwipe?: (angle: number) => void
     lockedScreen?: boolean
 }
 
@@ -50,7 +50,7 @@ function SwipeDiv({ children, className, style, onClick, onSwipe, lockedScreen }
         const angle = Math.atan2(mouseupPoint.y - mousedownPoint.y, mouseupPoint.x - mousedownPoint.x)
         mousedownPoint = undefined
         if (onSwipe) {
-            onSwipe(dist > 10 ? angle : undefined)
+            onSwipe(dist > 10 ? angle : Infinity)
         }
     }
     const keyupFn = (e: any) => {
@@ -66,7 +66,7 @@ function SwipeDiv({ children, className, style, onClick, onSwipe, lockedScreen }
         } else if (e.key === 'ArrowDown') {
             onSwipe(Math.PI / 2)
         } else if (e.key === 'Space') {
-            onSwipe(undefined)
+            onSwipe(Infinity)
         }
     }
     useEffect(() => {
@@ -105,7 +105,7 @@ function SwipeDiv({ children, className, style, onClick, onSwipe, lockedScreen }
                                 pressList[`${gamepadIndex}_${buttonIndex}`] = true
                             } else {
                                 if (pressList[`${gamepadIndex}_${buttonIndex}`]) {
-                                    const angle = buttonIndex === 12 ? -Math.PI / 2 : buttonIndex === 13 ? Math.PI / 2 : buttonIndex === 14 ? -Math.PI : buttonIndex === 15 ? 0 : undefined
+                                    const angle = buttonIndex === 12 ? -Math.PI / 2 : buttonIndex === 13 ? Math.PI / 2 : buttonIndex === 14 ? -Math.PI : buttonIndex === 15 ? 0 : Infinity
                                     if (typeof angle === 'number' && onSwipe) {
                                         onSwipe(angle)
                                     }

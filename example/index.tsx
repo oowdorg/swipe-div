@@ -9,7 +9,7 @@ function App() {
     return (
         <div className={classNames(styles.App)}>
             <SwipeDiv className={classNames(styles.App__SwipeDiv)} onSwipe={setAngle}>
-                <span>{typeof angle === 'undefined' ? 'click!' : angle}</span>
+                <span>{typeof angle === 'undefined' ? 'Swipe!' : angle === Infinity ? 'Clicked' : angle}</span>
             </SwipeDiv>
         </div>
     )
