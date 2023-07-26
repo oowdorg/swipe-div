@@ -1,0 +1,28 @@
+{
+    "name": "swipe-div",
+    "version": "1.0.0",
+    "description": "swipe div for react",
+    "scripts": {
+        "demo-start": "npm run demo-clean && parcel ./example/index.html --open",
+        "demo-build": "npm run demo-clean && parcel build ./example/index.html --public-url './'",
+        "demo-clean": "rm -rf .parcel-cache dist"
+    },
+    "keywords": [
+        "swipe div"
+    ],
+    "author": "oowd",
+    "license": "MIT",
+    "dependencies": {
+        "classnames": "^2.3.2",
+        "react": "^18.2.0",
+        "react-dom": "^18.2.0",
+        "use-local-storage": "^3.0.0"
+    },
+    "devDependencies": {
+        "@parcel/transformer-sass": "^2.9.3",
+        "@types/react": "^18.2.16",
+        "@types/react-dom": "^18.2.7",
+        "parcel": "^2.9.3",
+        "process": "^0.11.10"
+    }
+}
