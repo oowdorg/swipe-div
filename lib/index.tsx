@@ -2,17 +2,18 @@ import { CSSProperties, MouseEventHandler, ReactNode, useEffect, useState } from
 import classNames from 'classnames'
 import * as styles from './index.module.scss'
 
-class Point {
-    x: number
-    y: number
-    constructor(x: number, y: number) {
-        this.x = x
-        this.y = y
-    }
+export type SwipeData = {
+    angle: number
+    duration: number
 }
 
-let mousedownPoint: Point | undefined
-let pressList: { [key: string]: boolean } = {}
+type MousedownPoint = {
+    x: number
+    y: number
+    timestamp: number
+}
+
+const CLICK_DIST = 10
 
 interface Props {
     children?: ReactNode
@@ -20,14 +21,16 @@ interface Props {
     style?: CSSProperties
     onClick?: MouseEventHandler<HTMLDivElement>
     //
-    onSwipe?: (angle: number) => void
+    onSwipe: (swipeData: SwipeData) => void
     lockedScreen?: boolean
 }
 
 function SwipeDiv({ children, className, style, onClick, onSwipe, lockedScreen }: Props): JSX.Element {
     const [gamepadConnections, setGamepadConnections] = useState<boolean[]>([])
+    const [mousedownPoint, setMousedownPoint] = useState<MousedownPoint | undefined>()
+    const [pressTimestamps, setPressTimestamps] = useState<{ [key: string]: number }>({})
 
-    // Events
+    // Mouse
     const getPointByE = (e: any) => {
         // e.preventDefault()
         if (e.changedTouches && e.changedTouches[0]) {
@@ -36,42 +39,61 @@ function SwipeDiv({ children, className, style, onClick, onSwipe, lockedScreen }
         }
         const x = e.pageX
         const y = e.pageY
-        return new Point(x, y)
+        const mousedownPoint: MousedownPoint = { x, y, timestamp: Date.now() }
+        return mousedownPoint
     }
     const mousedownFn = (e: any) => {
-        mousedownPoint = getPointByE(e)
+        if (mousedownPoint || lockedScreen) {
+            return
+        }
+        setMousedownPoint(getPointByE(e))
     }
     const mouseupFn = (e: any) => {
         if (!mousedownPoint || lockedScreen) {
+            setMousedownPoint(undefined)
             return
         }
         const mouseupPoint = getPointByE(e)
         const dist = Math.sqrt(Math.pow(mouseupPoint.y - mousedownPoint.y, 2) + Math.pow(mouseupPoint.x - mousedownPoint.x, 2))
         const angle = Math.atan2(mouseupPoint.y - mousedownPoint.y, mouseupPoint.x - mousedownPoint.x)
-        mousedownPoint = undefined
-        if (onSwipe) {
-            onSwipe(dist > 10 ? angle : Infinity)
-        }
+        const duration = mouseupPoint.timestamp - mousedownPoint.timestamp
+        setMousedownPoint(undefined)
+        onSwipe({ angle: dist > CLICK_DIST ? angle : Infinity, duration })
     }
-    const keyupFn = (e: any) => {
-        if (!onSwipe) {
+
+    // Keyboard
+    const keydownFn = (e: any) => {
+        if (pressTimestamps[`key_${e.key}`] || lockedScreen) {
             return
         }
-        if (e.key === 'ArrowLeft') {
-            onSwipe(-Math.PI)
-        } else if (e.key === 'ArrowUp') {
-            onSwipe(-Math.PI / 2)
-        } else if (e.key === 'ArrowRight') {
-            onSwipe(0)
-        } else if (e.key === 'ArrowDown') {
-            onSwipe(Math.PI / 2)
-        } else if (e.key === 'Space') {
-            onSwipe(Infinity)
-        }
+        setPressTimestamps({ ...pressTimestamps, [`key_${e.key}`]: Date.now() })
     }
+    const keyupFn = (e: any) => {
+        const downTimestamp = pressTimestamps[`key_${e.key}`]
+        if (!downTimestamp || lockedScreen) {
+            setPressTimestamps({ ...pressTimestamps, [`key_${e.key}`]: 0 })
+            return
+        }
+        const duration = Date.now() - downTimestamp
+        if (e.key === 'ArrowLeft') {
+            onSwipe({ angle: -Math.PI, duration })
+        } else if (e.key === 'ArrowUp') {
+            onSwipe({ angle: -Math.PI / 2, duration })
+        } else if (e.key === 'ArrowRight') {
+            onSwipe({ angle: 0, duration })
+        } else if (e.key === 'ArrowDown') {
+            onSwipe({ angle: Math.PI / 2, duration })
+        } else if (e.key === ' ') {
+            onSwipe({ angle: Infinity, duration })
+        }
+        setPressTimestamps({ ...pressTimestamps, [`key_${e.key}`]: 0 })
+    }
+
+    // Reset, Gamepad
     useEffect(() => {
-        // Key
+        window.addEventListener('keydown', keydownFn)
         window.addEventListener('keyup', keyupFn)
+
         // Gamepad
         let gamepadCheckTimer: number | undefined = undefined
         let gamepadLoopTimer: number | undefined = undefined
@@ -101,16 +123,20 @@ function SwipeDiv({ children, className, style, onClick, onSwipe, lockedScreen }
                         const buttons = gamepad.buttons
                         for (let buttonIndex = 0; buttonIndex < buttons.length; buttonIndex++) {
                             const button = buttons[buttonIndex]
+                            const buttonKey = `${gamepadIndex}_${buttonIndex}`
                             if (button.pressed) {
-                                pressList[`${gamepadIndex}_${buttonIndex}`] = true
-                            } else {
-                                if (pressList[`${gamepadIndex}_${buttonIndex}`]) {
-                                    const angle = buttonIndex === 12 ? -Math.PI / 2 : buttonIndex === 13 ? Math.PI / 2 : buttonIndex === 14 ? -Math.PI : buttonIndex === 15 ? 0 : Infinity
-                                    if (typeof angle === 'number' && onSwipe) {
-                                        onSwipe(angle)
-                                    }
+                                if (pressTimestamps[buttonKey] || lockedScreen) {
+                                    setPressTimestamps({ ...pressTimestamps, [buttonKey]: 0 })
+                                } else {
+                                    setPressTimestamps({ ...pressTimestamps, [buttonKey]: Date.now() })
                                 }
-                                pressList[`${gamepadIndex}_${buttonIndex}`] = false
+                            } else if (!pressTimestamps[buttonKey] || lockedScreen) {
+                                setPressTimestamps({ ...pressTimestamps, [buttonKey]: 0 })
+                            } else {
+                                const angle = buttonIndex === 12 ? -Math.PI / 2 : buttonIndex === 13 ? Math.PI / 2 : buttonIndex === 14 ? -Math.PI : buttonIndex === 15 ? 0 : Infinity
+                                const duration = Date.now() - pressTimestamps[buttonKey]
+                                setPressTimestamps({ ...pressTimestamps, [buttonKey]: 0 })
+                                onSwipe({ angle, duration })
                             }
                         }
                         // const axes = gamepad.axes
@@ -123,9 +149,12 @@ function SwipeDiv({ children, className, style, onClick, onSwipe, lockedScreen }
             gamepadCheckTimer = setInterval(check, 1000 * 3)
             check()
         }
+
+        // Reset
         return () => {
-            // Key
+            window.removeEventListener('keydown', keydownFn)
             window.removeEventListener('keyup', keyupFn)
+
             // Gamepad
             if (typeof gamepadCheckTimer !== 'undefined') {
                 clearInterval(gamepadCheckTimer)
@@ -134,7 +163,7 @@ function SwipeDiv({ children, className, style, onClick, onSwipe, lockedScreen }
                 clearInterval(gamepadLoopTimer)
             }
         }
-    }, [lockedScreen, onSwipe, gamepadConnections])
+    }, [lockedScreen, onSwipe, gamepadConnections, mousedownPoint, pressTimestamps])
 
     // Render
     return (

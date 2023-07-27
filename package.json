@@ -3,9 +3,9 @@
     "version": "1.0.0",
     "description": "swipe div for react",
     "scripts": {
-        "demo-start": "npm run demo-clean && parcel ./example/index.html --open",
-        "demo-build": "npm run demo-clean && parcel build ./example/index.html --public-url './'",
-        "demo-clean": "rm -rf .parcel-cache dist"
+        "example-start": "npm run example-clean && parcel ./example/index.html --open",
+        "example-build": "npm run example-clean && parcel build ./example/index.html --public-url './'",
+        "example-clean": "rm -rf .parcel-cache dist"
     },
     "keywords": [
         "swipe div"
