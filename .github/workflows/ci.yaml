@@ -47,7 +47,7 @@ jobs:
             - name: Install dependencies
               run: npm install
             - name: Build
-              run: npm run demo-build
+              run: npm run example-build
             - name: Upload artifact
               uses: actions/upload-pages-artifact@v1
               with:
