@@ -17,7 +17,7 @@ type MousedownPoint = {
 
 const CLICK_DIST = 10
 
-type OnSwipe = (swipeData: SwipeData) => void
+export type OnSwipe = (swipeData: SwipeData) => void
 
 interface Props {
     children?: ReactNode
