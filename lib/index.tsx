@@ -47,13 +47,16 @@ function SwipeDiv({ children, className, style, onSwipe, lockedScreen }: Props):
         return mousedownPoint
     }
     const mousedownFn = (e: any) => {
-        if (mousedownPoint || lockedScreen) {
+        if (!(e.target as HTMLElement).classList.contains(styles.SwipeDiv) || mousedownPoint || lockedScreen) {
             return
         }
         setMousedownPoint(getPointByE(e))
     }
+    const mouseleaveFn = () => {
+        setMousedownPoint(undefined)
+    }
     const mouseupFn = (e: any) => {
-        if (!mousedownPoint || lockedScreen) {
+        if (!(e.target as HTMLElement).classList.contains(styles.SwipeDiv) || !mousedownPoint || lockedScreen) {
             setMousedownPoint(undefined)
             return
         }
@@ -176,7 +179,7 @@ function SwipeDiv({ children, className, style, onSwipe, lockedScreen }: Props):
 
     // Render
     return (
-        <div className={classNames(styles.SwipeDiv, className)} style={style} onMouseDown={mousedownFn} onMouseUp={mouseupFn} onTouchStart={mousedownFn} onTouchEnd={mouseupFn}>
+        <div className={classNames(styles.SwipeDiv, className)} style={style} onMouseDown={mousedownFn} onMouseUp={mouseupFn} onMouseLeave={mouseleaveFn} onTouchStart={mousedownFn} onTouchEnd={mouseupFn}>
             {children}
             <div className={classNames(styles.SwipeDiv__Gamepads)}>{gamepadConnections.map((flag) => flag && <span className={classNames(styles.SwipeDiv__Gamepads__Player)}>🎮</span>)}</div>
         </div>
