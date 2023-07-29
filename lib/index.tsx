@@ -5,6 +5,8 @@ import * as styles from './index.module.scss'
 export type SwipeData = {
     angle: number
     duration: number
+    x: number
+    y: number
 }
 
 type MousedownPoint = {
@@ -15,17 +17,19 @@ type MousedownPoint = {
 
 const CLICK_DIST = 10
 
+type OnSwipe = (swipeData: SwipeData) => void
+
 interface Props {
     children?: ReactNode
     className?: string
     style?: CSSProperties
     onClick?: MouseEventHandler<HTMLDivElement>
     //
-    onSwipe: (swipeData: SwipeData) => void
+    onSwipe: OnSwipe
     lockedScreen?: boolean
 }
 
-function SwipeDiv({ children, className, style, onClick, onSwipe, lockedScreen }: Props): JSX.Element {
+function SwipeDiv({ children, className, style, onSwipe, lockedScreen }: Props): JSX.Element {
     const [gamepadConnections, setGamepadConnections] = useState<boolean[]>([])
     const [mousedownPoint, setMousedownPoint] = useState<MousedownPoint | undefined>()
     const [pressTimestamps, setPressTimestamps] = useState<{ [key: string]: number }>({})
@@ -58,7 +62,12 @@ function SwipeDiv({ children, className, style, onClick, onSwipe, lockedScreen }
         const angle = Math.atan2(mouseupPoint.y - mousedownPoint.y, mouseupPoint.x - mousedownPoint.x)
         const duration = mouseupPoint.timestamp - mousedownPoint.timestamp
         setMousedownPoint(undefined)
-        onSwipe({ angle: dist > CLICK_DIST ? angle : Infinity, duration })
+        onSwipe({
+            angle: dist > CLICK_DIST ? angle : Infinity,
+            duration,
+            x: mouseupPoint.x,
+            y: mouseupPoint.y,
+        })
     }
 
     // Keyboard
@@ -76,15 +85,15 @@ function SwipeDiv({ children, className, style, onClick, onSwipe, lockedScreen }
         }
         const duration = Date.now() - downTimestamp
         if (e.key === 'ArrowLeft') {
-            onSwipe({ angle: -Math.PI, duration })
+            onSwipe({ angle: -Math.PI, duration, x: Infinity, y: Infinity })
         } else if (e.key === 'ArrowUp') {
-            onSwipe({ angle: -Math.PI / 2, duration })
+            onSwipe({ angle: -Math.PI / 2, duration, x: Infinity, y: Infinity })
         } else if (e.key === 'ArrowRight') {
-            onSwipe({ angle: 0, duration })
+            onSwipe({ angle: 0, duration, x: Infinity, y: Infinity })
         } else if (e.key === 'ArrowDown') {
-            onSwipe({ angle: Math.PI / 2, duration })
+            onSwipe({ angle: Math.PI / 2, duration, x: Infinity, y: Infinity })
         } else if (e.key === ' ') {
-            onSwipe({ angle: Infinity, duration })
+            onSwipe({ angle: Infinity, duration, x: Infinity, y: Infinity })
         }
         setPressTimestamps({ ...pressTimestamps, [`key_${e.key}`]: 0 })
     }
@@ -136,7 +145,7 @@ function SwipeDiv({ children, className, style, onClick, onSwipe, lockedScreen }
                                 const angle = buttonIndex === 12 ? -Math.PI / 2 : buttonIndex === 13 ? Math.PI / 2 : buttonIndex === 14 ? -Math.PI : buttonIndex === 15 ? 0 : Infinity
                                 const duration = Date.now() - pressTimestamps[buttonKey]
                                 setPressTimestamps({ ...pressTimestamps, [buttonKey]: 0 })
-                                onSwipe({ angle, duration })
+                                onSwipe({ angle, duration, x: Infinity, y: Infinity })
                             }
                         }
                         // const axes = gamepad.axes
