@@ -47,7 +47,8 @@ function SwipeDiv({ children, className, style, onSwipe, lockedScreen }: Props):
         return mousedownPoint
     }
     const mousedownFn = (e: any) => {
-        if (!(e.target as HTMLElement).classList.contains(styles.SwipeDiv) || mousedownPoint || lockedScreen) {
+        const target = e.target as HTMLElement
+        if (!(target.classList.contains(styles.SwipeDiv) || target.classList.contains(className)) || mousedownPoint || lockedScreen) {
             return
         }
         setMousedownPoint(getPointByE(e))
@@ -56,7 +57,8 @@ function SwipeDiv({ children, className, style, onSwipe, lockedScreen }: Props):
         setMousedownPoint(undefined)
     }
     const mouseupFn = (e: any) => {
-        if (!(e.target as HTMLElement).classList.contains(styles.SwipeDiv) || !mousedownPoint || lockedScreen) {
+        const target = e.target as HTMLElement
+        if (!(target.classList.contains(styles.SwipeDiv) || target.classList.contains(className)) || !mousedownPoint || lockedScreen) {
             setMousedownPoint(undefined)
             return
         }
