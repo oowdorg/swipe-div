@@ -1,6 +1,6 @@
 import SwipeDiv from './lib'
-import type { SwipeData } from './lib'
+import type { SwipeData, OnSwipe } from './lib'
 
-export { SwipeData }
+export { SwipeData, OnSwipe }
 
 export default SwipeDiv
