@@ -9,7 +9,7 @@ function App() {
     return (
         <div className={classNames(styles.App)}>
             <SwipeDiv className={classNames(styles.App__SwipeDiv)} onSwipe={setSwipeData}>
-                <span>{typeof swipeData === 'undefined' ? 'Swipe!' : swipeData.angle === Infinity ? `Clicked! ${swipeData.duration}` : swipeData.angle}</span>
+                <span>{typeof swipeData === 'undefined' ? 'Swipe!' : JSON.stringify(swipeData)}</span>
             </SwipeDiv>
         </div>
     )
